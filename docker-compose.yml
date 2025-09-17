@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  static-site:
+    build: ./services/static
+    image: hydra/static:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./services/static:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  load-tester:
+    build: ./services/load-tester
+    image: hydra/load-tester:latest
+    depends_on:
+      - static-site
+    # we run it manually with docker-compose run so it doesn't auto-start
+    entrypoint: ["/bin/sh", "-c", "while true; do sleep 3600; done"]

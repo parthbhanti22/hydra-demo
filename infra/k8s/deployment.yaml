@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hydra-static-site
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hydra-static-site
+  template:
+    metadata:
+      labels:
+        app: hydra-static-site
+    spec:
+      containers:
+        - name: static-site
+          image: hydra/static-site:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
