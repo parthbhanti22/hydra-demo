@@ -10,23 +10,25 @@
     input, button { padding: 10px; margin: 5px; border-radius: 6px; border: none; }
     button { background: #38bdf8; color: #fff; cursor: pointer; }
     button:hover { background: #0284c7; }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
   </style>
 </head>
 <body>
   <h1>🔱 Hydra Anti-Phishing & Traffic Defense</h1>
+  <p>Served by instance: <b>{{ instance }}</b></p>
 
   <div class="panel">
     <h2>Block a Suspicious Domain</h2>
     <input id="blockInput" placeholder="example.com">
-    <button onclick="blockUrl()">Block</button>
-    <p id="blockResult"></p>
+    <button onclick="blockUrl()">Block & Analyze</button>
+    <p><pre id="blockResult"></pre></p>
   </div>
 
   <div class="panel">
     <h2>Check Domain Safety</h2>
     <input id="checkInput" placeholder="example.com">
     <button onclick="checkUrl()">Check</button>
-    <p id="checkResult"></p>
+    <p><pre id="checkResult" style="text-align:left; color:#cfe7ff;"></pre></p>
   </div>
 
   <div class="panel">
@@ -35,20 +37,58 @@
   </div>
 
   <script>
-    async function blockUrl() {
-      const url = document.getElementById("blockInput").value;
-      let res = await fetch("/block", { method: "POST", body: "url=" + url, headers: {"Content-Type": "application/x-www-form-urlencoded"} });
-      document.getElementById("blockResult").innerText = await res.text();
-    }
     async function checkUrl() {
       const url = document.getElementById("checkInput").value;
-      let res = await fetch("/check?url=" + url);
-      document.getElementById("checkResult").innerText = await res.text();
+      const resEl = document.getElementById("checkResult");
+      resEl.innerText = "Checking...";
+      try {
+        const res = await fetch('/check?url=' + encodeURIComponent(url));
+        const j = await res.json();
+        if (!res.ok) {
+          resEl.innerText = "Error: " + (j.error || res.statusText);
+          return;
+        }
+        let text = `URL: ${j.url}\nReachable: ${j.reachable}\nStatus: ${j.status_code}\n`;
+        if (j.error) text += `Error: ${j.error}\n`;
+        if (j.content_snippet) text += `Snippet: ${j.content_snippet}`;
+        resEl.innerText = text;
+      } catch (err) {
+        resEl.innerText = "Fetch error: " + err;
+      }
     }
+    
+    async function blockUrl() {
+      const url = document.getElementById("blockInput").value;
+      const resEl = document.getElementById("blockResult");
+      resEl.innerText = "Blocking and analyzing...";
+      try {
+        const formData = new URLSearchParams();
+        formData.append('url', url);
+        
+        const res = await fetch("/block", { 
+            method: "POST", 
+            body: formData 
+        });
+        
+        const j = await res.json();
+        if (!res.ok) {
+            resEl.innerText = "Error: " + (j.message || "Failed to block.");
+        } else {
+            resEl.innerText = "Success!\n" + j.message;
+        }
+      } catch(err) {
+        resEl.innerText = "Fetch error: " + err;
+      }
+    }
+    
     // Poll backend for status
     setInterval(async () => {
-      let res = await fetch("/status");
-      document.getElementById("status").innerText = await res.text();
+      try {
+        const res = await fetch("/status");
+        document.getElementById("status").innerText = await res.text();
+      } catch (err) {
+        document.getElementById("status").innerText = "Connection failed.";
+      }
     }, 2000);
   </script>
 </body>

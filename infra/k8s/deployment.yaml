@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hydra-app
+  name: hydra-app-deployment
+  labels:
+    app: hydra-app
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: hydra-app
@@ -13,27 +15,51 @@ spec:
         app: hydra-app
     spec:
       containers:
-        - name: app
-          image: 808155925440.dkr.ecr.ap-south-1.amazonaws.com/hydra/app:latest
-          ports:
-            - containerPort: 5000
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "256Mi"
+      - name: hydra-app
+        # This image URL will be set by the deploy script
+        image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_AWS_REGION.amazonaws.com/hydra-app:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: S3_BUCKET_NAME
+          # This value will be set by the deploy script
+          value: "hydra-phishing-evidence-YOUR_AWS_ACCOUNT_ID"
+        - name: REDIS_HOST
+          value: "redis-service"
+        envFrom:
+        - secretRef:
+            name: aws-credentials
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:6.2-alpine
+        ports:
+        - containerPort: 6379
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: hydra-app
+  name: redis-service
 spec:
   selector:
-    app: hydra-app
+    app: redis
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
-  type: LoadBalancer
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
