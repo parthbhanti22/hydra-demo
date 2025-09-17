@@ -30,7 +30,8 @@
   <h1>🔱 Hydra Autoscaling Demo</h1>
   <p>Welcome to your test page served by Nginx inside Docker.</p>
   <div class="instance">
-    Instance ID: <strong>$(hostname)</strong>
+    Instance ID: ${HOSTNAME}
+
   </div>
 </body>
 </html>

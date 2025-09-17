@@ -1,12 +1,8 @@
 FROM nginx:alpine
 
-# install envsubst
 RUN apk add --no-cache gettext
 
-# copy html template
-COPY services/static/index.html /usr/share/nginx/html/index.html.template
-
-# copy entrypoint script
+COPY services/static/index.html.template /usr/share/nginx/html/
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
