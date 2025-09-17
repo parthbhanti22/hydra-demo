@@ -1,11 +1,14 @@
-# Use official Nginx image
 FROM nginx:alpine
 
-# Copy your frontend files (replace 'dist' with your actual build folder)
-COPY services/static/ /usr/share/nginx/html
+# install envsubst
+RUN apk add --no-cache gettext
 
-# Expose port 80
+# copy html template
+COPY services/static/index.html /usr/share/nginx/html/index.html.template
+
+# copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 80
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/entrypoint.sh"]
