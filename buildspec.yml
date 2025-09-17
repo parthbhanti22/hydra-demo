@@ -1,8 +1,4 @@
-# buildspec.yml
 version: 0.2
-
-env:
-  privileged: true   # <--- enables Docker-in-Docker
 
 phases:
   install:
@@ -12,20 +8,13 @@ phases:
       - echo "Installing dependencies..."
   pre_build:
     commands:
-      - echo "Pre-build started on `date`"
-      - docker --version
+      - echo "Pre-build: checking environment"
+      - docker --version || true
   build:
     commands:
-      - echo "Build started on `date`"
-      - echo "Building Hydra static-site image..."
-      - docker build -t hydra/static ./services/static
-      - echo "Building Hydra load-tester image..."
-      - docker build -t hydra/load-tester ./services/load-tester
-  post_build:
-    commands:
-      - echo "Build completed on `date`"
-      - echo "All images built successfully."
-
+      - echo "Running k6 load test against $TARGET_URL"
+      # run k6 in a docker container; services/load-tester/k6-loadtest.js must be in repo
+      - docker run --rm -i loadimpact/k6 run - < services/load-tester/k6-loadtest.js
 artifacts:
   files:
     - '**/*'
