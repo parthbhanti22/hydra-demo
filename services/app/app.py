@@ -45,3 +45,13 @@ def compute():
     for i in range(loops):
         s += math.sqrt((i % 100) + 1) * 0.000001
     return jsonify({"result": "done", "loops": loops, "instance": INSTANCE})
+
+@app.route("/status")
+def status():
+    count = r.get("request_count")
+    if not count:
+        return "Waiting for requests..."
+    count = int(count)
+    if count > 100:
+        return f"⚠️ High Load! ({count} requests)"
+    return f"✅ Healthy ({count} requests)"

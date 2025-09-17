@@ -1,57 +1,55 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Hydra - Defense Dashboard</title>
+  <meta charset="UTF-8">
+  <title>🔱 Hydra Security Dashboard</title>
   <style>
-    body { font-family: system-ui, -apple-system, Arial; background:#071124; color:#e6eef8; text-align:center; padding:32px; }
-    .card { background:#0b2540; padding:20px; border-radius:10px; display:inline-block; min-width:420px; }
-    h1 { color:#7dd3fc; margin:0 0 8px; }
-    .big { font-size:28px; color:#a78bfa; margin-top:10px; }
-    #log { margin-top:12px; color:#cfe7ff; font-size:14px; }
-    button { margin-top:12px; padding:8px 12px; border-radius:6px; border:none; background:#06b6d4; color:#022; cursor:pointer; }
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; text-align: center; padding: 50px; }
+    h1 { font-size: 3em; color: #38bdf8; }
+    .panel { background: #1e293b; border-radius: 12px; padding: 20px; margin: 20px auto; width: 60%; }
+    input, button { padding: 10px; margin: 5px; border-radius: 6px; border: none; }
+    button { background: #38bdf8; color: #fff; cursor: pointer; }
+    button:hover { background: #0284c7; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>🔱 Hydra Defense Dashboard</h1>
-    <div>Instance: <span id="instance">{{ instance }}</span></div>
-    <div class="big">Blocked phishing attempts: <span id="blocked">0</span></div>
+  <h1>🔱 Hydra Anti-Phishing & Traffic Defense</h1>
 
-    <div id="log"></div>
-    <button id="blockBtn">Simulate phishing (block)</button>
+  <div class="panel">
+    <h2>Block a Suspicious Domain</h2>
+    <input id="blockInput" placeholder="example.com">
+    <button onclick="blockUrl()">Block</button>
+    <p id="blockResult"></p>
   </div>
 
-<script>
-const blockedEl = document.getElementById('blocked');
-const instanceEl = document.getElementById('instance');
-const logEl = document.getElementById('log');
-const btn = document.getElementById('blockBtn');
+  <div class="panel">
+    <h2>Check Domain Safety</h2>
+    <input id="checkInput" placeholder="example.com">
+    <button onclick="checkUrl()">Check</button>
+    <p id="checkResult"></p>
+  </div>
 
-async function refresh(){
-  try {
-    const r = await fetch('/metrics');
-    const j = await r.json();
-    blockedEl.innerText = j.blocked;
-    instanceEl.innerText = j.instance;
-  } catch(e){
-    logEl.innerText = "Error: " + e;
-  }
-}
+  <div class="panel">
+    <h2>System Status</h2>
+    <p id="status">Waiting for requests...</p>
+  </div>
 
-btn.addEventListener('click', async ()=> {
-  try {
-    const r = await fetch('/block', { method: 'POST' });
-    const j = await r.json();
-    logEl.innerText = 'Blocked: ' + j.blocked + ' (instance: ' + j.getInstance + ')';
-    await refresh();
-  } catch(e){
-    logEl.innerText = 'Error blocking: ' + e;
-  }
-});
-
-setInterval(refresh, 1500);
-refresh();
-</script>
+  <script>
+    async function blockUrl() {
+      const url = document.getElementById("blockInput").value;
+      let res = await fetch("/block", { method: "POST", body: "url=" + url, headers: {"Content-Type": "application/x-www-form-urlencoded"} });
+      document.getElementById("blockResult").innerText = await res.text();
+    }
+    async function checkUrl() {
+      const url = document.getElementById("checkInput").value;
+      let res = await fetch("/check?url=" + url);
+      document.getElementById("checkResult").innerText = await res.text();
+    }
+    // Poll backend for status
+    setInterval(async () => {
+      let res = await fetch("/status");
+      document.getElementById("status").innerText = await res.text();
+    }, 2000);
+  </script>
 </body>
 </html>
