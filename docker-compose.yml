@@ -1,18 +1,23 @@
 version: "3.8"
 services:
-  static-site:
-    build: ./services/static
-    image: hydra/static:latest
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  app:
+    build: ./services/app
+    image: hydra/app:local
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
     ports:
-      - "8080:80"
-    volumes:
-      - ./services/static:/usr/share/nginx/html:ro
+      - "8080:5000"
     restart: unless-stopped
 
   load-tester:
     build: ./services/load-tester
-    image: hydra/load-tester:latest
+    image: hydra/load-tester:local
     depends_on:
-      - static-site
-    # we run it manually with docker-compose run so it doesn't auto-start
+      - app
     entrypoint: ["/bin/sh", "-c", "while true; do sleep 3600; done"]

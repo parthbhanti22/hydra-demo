@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hydra - Defense Dashboard</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Arial; background:#071124; color:#e6eef8; text-align:center; padding:32px; }
+    .card { background:#0b2540; padding:20px; border-radius:10px; display:inline-block; min-width:420px; }
+    h1 { color:#7dd3fc; margin:0 0 8px; }
+    .big { font-size:28px; color:#a78bfa; margin-top:10px; }
+    #log { margin-top:12px; color:#cfe7ff; font-size:14px; }
+    button { margin-top:12px; padding:8px 12px; border-radius:6px; border:none; background:#06b6d4; color:#022; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔱 Hydra Defense Dashboard</h1>
+    <div>Instance: <span id="instance">{{ instance }}</span></div>
+    <div class="big">Blocked phishing attempts: <span id="blocked">0</span></div>
+
+    <div id="log"></div>
+    <button id="blockBtn">Simulate phishing (block)</button>
+  </div>
+
+<script>
+const blockedEl = document.getElementById('blocked');
+const instanceEl = document.getElementById('instance');
+const logEl = document.getElementById('log');
+const btn = document.getElementById('blockBtn');
+
+async function refresh(){
+  try {
+    const r = await fetch('/metrics');
+    const j = await r.json();
+    blockedEl.innerText = j.blocked;
+    instanceEl.innerText = j.instance;
+  } catch(e){
+    logEl.innerText = "Error: " + e;
+  }
+}
+
+btn.addEventListener('click', async ()=> {
+  try {
+    const r = await fetch('/block', { method: 'POST' });
+    const j = await r.json();
+    logEl.innerText = 'Blocked: ' + j.blocked + ' (instance: ' + j.getInstance + ')';
+    await refresh();
+  } catch(e){
+    logEl.innerText = 'Error blocking: ' + e;
+  }
+});
+
+setInterval(refresh, 1500);
+refresh();
+</script>
+</body>
+</html>

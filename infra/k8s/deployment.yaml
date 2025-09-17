@@ -1,26 +1,39 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hydra-static-site
+  name: hydra-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hydra-static-site
+      app: hydra-app
   template:
     metadata:
       labels:
-        app: hydra-static-site
+        app: hydra-app
     spec:
       containers:
-        - name: static-site
-          image: hydra/static-site:latest
+        - name: app
+          image: 808155925440.dkr.ecr.ap-south-1.amazonaws.com/hydra/app:latest
           ports:
-            - containerPort: 80
+            - containerPort: 5000
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
+              cpu: "100m"
+              memory: "128Mi"
             limits:
-              cpu: 500m
-              memory: 256Mi
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hydra-app
+spec:
+  selector:
+    app: hydra-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
